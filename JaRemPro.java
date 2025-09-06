@@ -1,8 +1,9 @@
+import java.awt.Image;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Timer;
 import java.util.TimerTask;
-import javax.swing.JOptionPane;
+import javax.swing.*;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -10,6 +11,9 @@ public class JaRemPro {
     public static void main(String[] args) {
         List<String> tasks = new ArrayList<>();
         List<String> times = new ArrayList<>();
+        JFrame frame=new JFrame();
+        frame.setAlwaysOnTop(true);
+        String[] options={"Ok","Snooze"};
         for (int i = 0; i < args.length; i++) {
             if (args[i].equalsIgnoreCase("-task")) {
                 StringBuilder taskBuilder=new StringBuilder();
@@ -67,6 +71,7 @@ public class JaRemPro {
             }
             LocalTime currentTime = LocalTime.now();
             long delay = java.time.Duration.between(currentTime, remTime).toMillis();
+            delay=3000;
             final String remTask = task;
             if (delay <= 0) {
                 System.out.println("⏰ It's already past the reminder time!");
@@ -74,7 +79,31 @@ public class JaRemPro {
                 Timer timer = new Timer();
                 timer.schedule(new TimerTask() {
                     public void run() {
-                        JOptionPane.showMessageDialog(null, remTask, "JaRemPro", JOptionPane.INFORMATION_MESSAGE);
+                        ImageIcon icon=new ImageIcon(new ImageIcon("reminder.gif").getImage().getScaledInstance(100,100,Image.SCALE_SMOOTH));
+                        SwingUtilities.invokeLater(()->{
+                            int choice=JOptionPane.showOptionDialog(frame, remTask, "JaRemPro", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
+                            if(choice==0){
+                                System.out.println("Dismiss Choosen");
+                                System.exit(0);
+                            }
+                            else if(choice==1){
+                                System.out.println("Snooze Choosen");
+                                String input=JOptionPane.showInputDialog(frame,"Snooze time in minutes:","JaRemPro",JOptionPane.QUESTION_MESSAGE);
+                                try{
+                                int snoozeTime=Integer.parseInt(input);
+                                System.out.println("Snooze Time: "+snoozeTime);
+                                }
+                                catch(NumberFormatException e){
+                                    JOptionPane.showMessageDialog(frame, "Invalid Snooze Time", "JaRemPro", JOptionPane.WARNING_MESSAGE);
+                                }
+
+                            }
+                            else if(choice==-1){
+                                System.out.println("X Chooen");
+                                System.exit(0);
+                            }
+                            frame.dispose();
+                          });
                         java.awt.Toolkit.getDefaultToolkit().beep();
                         timer.cancel();
                     }
