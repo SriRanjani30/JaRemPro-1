@@ -3,11 +3,17 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import javax.swing.*;
 import java.util.List;
 import java.util.ArrayList;
 
 public class JaRemPro {
+    private static final ScheduledExecutorService scheduler=Executors.newSingleThreadScheduledExecutor();
+    public static void showReminder(){
+
+    }
     public static void main(String[] args) {
         List<String> tasks = new ArrayList<>();
         List<String> times = new ArrayList<>();
@@ -92,11 +98,11 @@ public class JaRemPro {
                                 try{
                                 int snoozeTime=Integer.parseInt(input);
                                 System.out.println("Snooze Time: "+snoozeTime);
+                                scheduler.schedule(()->javax.swing.SwingUtilities.invokeLater(()->showReminder()),snoozeTime,java.util.concurrent.TimeUnit.MINUTES);
                                 }
                                 catch(NumberFormatException e){
                                     JOptionPane.showMessageDialog(frame, "Invalid Snooze Time", "JaRemPro", JOptionPane.WARNING_MESSAGE);
                                 }
-
                             }
                             else if(choice==-1){
                                 System.out.println("X Chooen");
