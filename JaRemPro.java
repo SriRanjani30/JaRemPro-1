@@ -5,20 +5,20 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.swing.*;
 import java.util.List;
+import java.util.Map;
 import java.util.ArrayList;
 
 public class JaRemPro {
-    private static final ScheduledExecutorService scheduler=Executors.newSingleThreadScheduledExecutor();
-    public static void showReminder(){
-
-    }
+    private static final ScheduledExecutorService scheduler= Executors.newSingleThreadScheduledExecutor();
+    private static List<String> reminders=new ArrayList<>();
     public static void main(String[] args) {
         List<String> tasks = new ArrayList<>();
         List<String> times = new ArrayList<>();
-        JFrame frame=new JFrame();
-        frame.setAlwaysOnTop(true);
         String[] options={"Ok","Snooze"};
         for (int i = 0; i < args.length; i++) {
             if (args[i].equalsIgnoreCase("-task")) {
@@ -37,8 +37,7 @@ public class JaRemPro {
                     tasks.add(taskStr);
                 }
                 i=j-1;
-
-
+                reminders.add(taskStr);
             }
             if (args[i].equalsIgnoreCase("-time")) {
                 StringBuilder timeBuilder=new StringBuilder();
@@ -77,7 +76,6 @@ public class JaRemPro {
             }
             LocalTime currentTime = LocalTime.now();
             long delay = java.time.Duration.between(currentTime, remTime).toMillis();
-            delay=3000;
             final String remTask = task;
             if (delay <= 0) {
                 System.out.println("⏰ It's already past the reminder time!");
@@ -85,12 +83,18 @@ public class JaRemPro {
                 Timer timer = new Timer();
                 timer.schedule(new TimerTask() {
                     public void run() {
+                        JFrame frame=new JFrame();
+                        frame.setAlwaysOnTop(true);
                         ImageIcon icon=new ImageIcon(new ImageIcon("reminder.gif").getImage().getScaledInstance(100,100,Image.SCALE_SMOOTH));
                         SwingUtilities.invokeLater(()->{
                             int choice=JOptionPane.showOptionDialog(frame, remTask, "JaRemPro", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
                             if(choice==0){
                                 System.out.println("Dismiss Choosen");
-                                System.exit(0);
+                                reminders.remove(remTask);
+                                if(reminders.isEmpty()){
+                                    System.exit(0);
+                                }
+                                frame.dispose();
                             }
                             else if(choice==1){
                                 System.out.println("Snooze Choosen");
@@ -98,17 +102,17 @@ public class JaRemPro {
                                 try{
                                 int snoozeTime=Integer.parseInt(input);
                                 System.out.println("Snooze Time: "+snoozeTime);
-                                scheduler.schedule(()->javax.swing.SwingUtilities.invokeLater(()->showReminder()),snoozeTime,java.util.concurrent.TimeUnit.MINUTES);
+                                scheduler.schedule(()->SwingUtilities.invokeLater(this::run), snoozeTime, TimeUnit.MINUTES);
                                 }
                                 catch(NumberFormatException e){
                                     JOptionPane.showMessageDialog(frame, "Invalid Snooze Time", "JaRemPro", JOptionPane.WARNING_MESSAGE);
                                 }
+
                             }
                             else if(choice==-1){
-                                System.out.println("X Chooen");
+                                System.out.println("X Choosen");
                                 System.exit(0);
                             }
-                            frame.dispose();
                           });
                         java.awt.Toolkit.getDefaultToolkit().beep();
                         timer.cancel();
