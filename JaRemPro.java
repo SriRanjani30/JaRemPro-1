@@ -1,22 +1,28 @@
 import java.awt.Image;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import javax.swing.*;
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
 
 public class JaRemPro {
     private static final ScheduledExecutorService scheduler= Executors.newSingleThreadScheduledExecutor();
-    private static List<String> reminders=new ArrayList<>();
+    private static final List<String> reminders=new ArrayList<>();
+    private static final String [] iconPaths={"icons/Bird.png","icons/Clock.png","icons/Dog.png","icons/Hen.png","icons/Snail.png","icons/Monitor.png","icons/Plane.png"};
+    private static final Random rand = new Random();
     public static void main(String[] args) {
+         if(args.length>0){
+        
+        }
+        else{
+            SwingUtilities.invokeLater(()->new reminderInputGUI());
+        }
         List<String> tasks = new ArrayList<>();
         List<String> times = new ArrayList<>();
         String[] options={"Ok","Snooze"};
@@ -31,7 +37,11 @@ public class JaRemPro {
                 }
                 String taskStr=taskBuilder.toString().trim();
                 if(taskStr.isEmpty()){
-                    System.out.println("⚠️ Missing task after -task");
+                    JFrame frame=new JFrame();
+                    frame.setAlwaysOnTop(true);
+                    JOptionPane.showMessageDialog(frame, "Missing task after -task", "JaRemPro", JOptionPane.WARNING_MESSAGE);
+                    frame.dispose();
+                    return;
                 }
                 else{
                     tasks.add(taskStr);
@@ -48,7 +58,11 @@ public class JaRemPro {
                 }
                 String timeStr=timeBuilder.toString().trim();
                 if(timeStr.isEmpty()){
-                    System.out.println("⚠️ Missing time after -time");
+                    JFrame frame=new JFrame();
+                    frame.setAlwaysOnTop(true);
+                    JOptionPane.showMessageDialog(frame, "Missing time after -time", "JaRemPro", JOptionPane.WARNING_MESSAGE);
+                    frame.dispose();
+                    return;
                 }
                 else{
                     times.add(timeStr);
@@ -57,8 +71,10 @@ public class JaRemPro {
             }
         }
         if(tasks.size()!=times.size()){
-            System.out.println("⚠️ Tasks and times do not match. Please check your input.");
-            return;
+            JFrame frame=new JFrame();
+            frame.setAlwaysOnTop(true);
+            JOptionPane.showMessageDialog(frame, "Tasks and times do not match. Please check your input.", "JaRemPro", JOptionPane.WARNING_MESSAGE);
+            frame.dispose();
         }
         else{
         for (int i = 0; i < tasks.size(); i++) {
@@ -78,40 +94,48 @@ public class JaRemPro {
             long delay = java.time.Duration.between(currentTime, remTime).toMillis();
             final String remTask = task;
             if (delay <= 0) {
-                System.out.println("⏰ It's already past the reminder time!");
+                JFrame frame=new JFrame();
+                frame.setAlwaysOnTop(true);
+                JOptionPane.showMessageDialog(frame, "It's already past the reminder time!", "JaRemPro", JOptionPane.WARNING_MESSAGE);
+                frame.dispose();
+                return;
             } else {
                 Timer timer = new Timer();
                 timer.schedule(new TimerTask() {
                     public void run() {
                         JFrame frame=new JFrame();
                         frame.setAlwaysOnTop(true);
-                        ImageIcon icon=new ImageIcon(new ImageIcon("reminder.gif").getImage().getScaledInstance(100,100,Image.SCALE_SMOOTH));
+                        ImageIcon icon=randomIcon(50, 50);
                         SwingUtilities.invokeLater(()->{
-                            int choice=JOptionPane.showOptionDialog(frame, remTask, "JaRemPro", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
-                            if(choice==0){
-                                System.out.println("Dismiss Choosen");
+                            int choice=JOptionPane.showOptionDialog(frame, remTask, "JaRemPro - Reminder", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, icon, options, options[0]);
+                            switch (choice){
+                                case 0:
                                 reminders.remove(remTask);
                                 if(reminders.isEmpty()){
                                     System.exit(0);
                                 }
                                 frame.dispose();
-                            }
-                            else if(choice==1){
-                                System.out.println("Snooze Choosen");
+                                break;
+                                
+                                case 1:
                                 String input=JOptionPane.showInputDialog(frame,"Snooze time in minutes:","JaRemPro",JOptionPane.QUESTION_MESSAGE);
                                 try{
                                 int snoozeTime=Integer.parseInt(input);
-                                System.out.println("Snooze Time: "+snoozeTime);
                                 scheduler.schedule(()->SwingUtilities.invokeLater(this::run), snoozeTime, TimeUnit.MINUTES);
                                 }
                                 catch(NumberFormatException e){
                                     JOptionPane.showMessageDialog(frame, "Invalid Snooze Time", "JaRemPro", JOptionPane.WARNING_MESSAGE);
                                 }
+                                break;
 
-                            }
-                            else if(choice==-1){
-                                System.out.println("X Choosen");
+                            case -1:
                                 System.exit(0);
+                                break;
+
+                            default:
+                                System.out.println("Unknown Choice");
+                                break;
+                            
                             }
                           });
                         java.awt.Toolkit.getDefaultToolkit().beep();
@@ -119,10 +143,13 @@ public class JaRemPro {
                     }
                 }, delay);
             }
-            System.out.println("✅ Reminder set for " + remTime + " → " + task);
-            System.out.println(task);
-            System.out.println(time);
+            System.out.println("Reminder set for " + remTime + " : " + task);
         }
     }
+    }
+    private static ImageIcon randomIcon(int height, int width){
+        String path=iconPaths[rand.nextInt(iconPaths.length)];
+        return new ImageIcon(new ImageIcon(path).getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH));
+
     }
 }
